@@ -19,6 +19,7 @@ public class ConsoleUI {
 
     private final TaskMenu taskMenu;
     private final ProjectMenu projectMenu;
+    private final DependencyMenu dependencyMenu;
 
     private final Scanner scanner;
 
@@ -36,13 +37,28 @@ public class ConsoleUI {
         JsonProjectRepository projectRepository =
                 new JsonProjectRepository("data/projects.json");
 
-        taskService = new TaskService(taskRepository);
-
         projectService = new ProjectService(projectRepository);
 
-        taskMenu = new TaskMenu(taskService, scanner);
+        taskService = new TaskService(
+                taskRepository,
+                projectService
+        );
 
-        projectMenu = new ProjectMenu(projectService, scanner);
+        taskMenu = new TaskMenu(
+                taskService,
+                projectService,
+                scanner
+        );
+
+        projectMenu = new ProjectMenu(
+                projectService,
+                scanner
+        );
+
+        dependencyMenu = new DependencyMenu(
+                taskService,
+                scanner
+        );
     }
 
     public void start() {
@@ -63,8 +79,17 @@ public class ConsoleUI {
 
                 case 2 -> projectMenu.display();
 
-                case 3, 4, 5, 6, 7 ->
-                        System.out.println("\nThis feature is coming soon!");
+                case 3 ->
+                        System.out.println(
+                                "\nScheduling will be implemented next!"
+                        );
+
+                case 4 -> dependencyMenu.display();
+
+                case 5, 6, 7 ->
+                        System.out.println(
+                                "\nThis feature is coming soon!"
+                        );
 
                 case 8 -> {
                     System.out.println(

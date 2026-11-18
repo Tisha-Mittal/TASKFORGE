@@ -6,6 +6,8 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.LinkedHashSet;
+import java.util.Set;
 import java.util.UUID;
 
 public class Task {
@@ -16,7 +18,11 @@ public class Task {
     private Priority priority;
     private TaskStatus status;
     private LocalDate deadline;
+    private String projectId;
     private final LocalDateTime createdAt;
+
+    // Stores IDs of tasks that must be completed first
+    private Set<String> dependencies = new LinkedHashSet<>();
 
     // Constructor used when creating a new task
     public Task(String title, String description,
@@ -33,7 +39,7 @@ public class Task {
         );
     }
 
-    // Constructor used by Jackson when loading tasks from JSON
+    // Constructor used by Jackson
     @JsonCreator
     public Task(
             @JsonProperty("id") String id,
@@ -112,6 +118,14 @@ public class Task {
         return createdAt;
     }
 
+    public String getProjectId() {
+        return projectId;
+    }
+
+    public Set<String> getDependencies() {
+        return Set.copyOf(dependencies);
+    }
+
     // Setters
 
     public void setTitle(String title) {
@@ -157,4 +171,42 @@ public class Task {
     public void setDeadline(LocalDate deadline) {
         this.deadline = deadline;
     }
+
+    public void setProjectId(String projectId) {
+
+        this.projectId = (projectId == null || projectId.isBlank())
+                ? null
+                : projectId.trim();
+    }
+
+    // Dependency management methods
+
+    public void addDependency(String taskId) {
+
+        if (taskId == null || taskId.isBlank()) {
+            throw new IllegalArgumentException(
+                    "Dependency task ID cannot be empty."
+            );
+        }
+
+        if (id.equals(taskId)) {
+            throw new IllegalArgumentException(
+                    "A task cannot depend on itself."
+            );
+        }
+
+        dependencies.add(taskId.trim());
+    }
+
+    public boolean removeDependency(String taskId) {
+        return dependencies.remove(taskId);
+    }
+
+    public void setDependencies(Set<String> dependencies) {
+
+        this.dependencies = dependencies == null
+                ? new LinkedHashSet<>()
+                : new LinkedHashSet<>(dependencies);
+    }
+
 }

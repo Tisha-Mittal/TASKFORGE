@@ -2,7 +2,10 @@
 package com.taskforge.cli;
 
 import com.taskforge.service.TaskService;
+import com.taskforge.service.ProjectService;
+
 import com.taskforge.repository.JsonTaskRepository;
+import com.taskforge.repository.JsonProjectRepository;
 
 import java.util.Scanner;
 
@@ -10,8 +13,13 @@ public class ConsoleUI {
 
     private final Menu menu;
     private final InputHandler inputHandler;
+
     private final TaskService taskService;
+    private final ProjectService projectService;
+
     private final TaskMenu taskMenu;
+    private final ProjectMenu projectMenu;
+
     private final Scanner scanner;
 
     public ConsoleUI() {
@@ -22,12 +30,19 @@ public class ConsoleUI {
 
         inputHandler = new InputHandler(scanner);
 
-        JsonTaskRepository repository =
+        JsonTaskRepository taskRepository =
                 new JsonTaskRepository("data/tasks.json");
 
-        taskService = new TaskService(repository);
+        JsonProjectRepository projectRepository =
+                new JsonProjectRepository("data/projects.json");
+
+        taskService = new TaskService(taskRepository);
+
+        projectService = new ProjectService(projectRepository);
 
         taskMenu = new TaskMenu(taskService, scanner);
+
+        projectMenu = new ProjectMenu(projectService, scanner);
     }
 
     public void start() {
@@ -46,8 +61,10 @@ public class ConsoleUI {
 
                 case 1 -> taskMenu.display();
 
-                case 2, 3, 4, 5, 6, 7 ->
-                    System.out.println("\nThis feature is coming soon!");
+                case 2 -> projectMenu.display();
+
+                case 3, 4, 5, 6, 7 ->
+                        System.out.println("\nThis feature is coming soon!");
 
                 case 8 -> {
                     System.out.println(
@@ -57,9 +74,9 @@ public class ConsoleUI {
                 }
 
                 default ->
-                    System.out.println(
-                            "\nInvalid choice! Please enter a number between 1 and 8."
-                    );
+                        System.out.println(
+                                "\nInvalid choice! Please enter a number between 1 and 8."
+                        );
             }
         }
 

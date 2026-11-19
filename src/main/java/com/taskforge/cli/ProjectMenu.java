@@ -4,6 +4,7 @@ package com.taskforge.cli;
 import com.taskforge.model.Project;
 import com.taskforge.model.ProjectStatus;
 import com.taskforge.service.ProjectService;
+import com.taskforge.service.TaskService;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
@@ -12,10 +13,15 @@ import java.util.Scanner;
 public class ProjectMenu {
 
     private final ProjectService projectService;
+    private final TaskService taskService;
     private final Scanner scanner;
 
-    public ProjectMenu(ProjectService projectService, Scanner scanner) {
+    public ProjectMenu(
+            ProjectService projectService,
+            TaskService taskService,
+            Scanner scanner) {
         this.projectService = projectService;
+        this.taskService = taskService;
         this.scanner = scanner;
     }
 
@@ -211,6 +217,23 @@ public class ProjectMenu {
 
         System.out.print("\nEnter Project ID to delete: ");
         String projectId = scanner.nextLine();
+
+        if (projectService.findProjectById(projectId).isEmpty()) {
+            System.out.println("\nProject not found.");
+            return;
+        }
+
+        // Prevent deleting a project that still has assigned tasks.
+        var assignedTasks = taskService.getTasksByProjectId(projectId);
+        if (!assignedTasks.isEmpty()) {
+            System.out.println(
+                    "\nCannot delete this project because " +
+                            assignedTasks.size() +
+                            " task(s) are still assigned to it. " +
+                            "Reassign or delete those tasks first."
+            );
+            return;
+        }
 
         boolean deleted = projectService.deleteProject(projectId);
 

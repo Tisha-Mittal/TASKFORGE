@@ -10,6 +10,7 @@ import com.taskforge.service.ProjectService;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
+import java.util.List;
 import java.util.Optional;
 import java.util.Scanner;
 
@@ -38,14 +39,16 @@ public class TaskMenu {
             System.out.println("\n========== TASK MANAGEMENT ==========");
             System.out.println("1. Create Task");
             System.out.println("2. View All Tasks");
-            System.out.println("3. Search Task");
-            System.out.println("4. Update Task");
-            System.out.println("5. Change Task Status");
-            System.out.println("6. Delete Task");
-            System.out.println("7. Assign Task to Project");
-            System.out.println("8. View Project Tasks");
-            System.out.println("9. Remove Task from Project");
-            System.out.println("10. Return to Main Menu");
+            System.out.println("3. Search Tasks (by keyword)");
+            System.out.println("4. Filter Tasks by Status");
+            System.out.println("5. Filter Tasks by Priority");
+            System.out.println("6. Update Task");
+            System.out.println("7. Change Task Status");
+            System.out.println("8. Delete Task");
+            System.out.println("9. Assign Task to Project");
+            System.out.println("10. View Project Tasks");
+            System.out.println("11. Remove Task from Project");
+            System.out.println("12. Return to Main Menu");
             System.out.print("Enter your choice: ");
 
             String choice = scanner.nextLine().trim();
@@ -54,14 +57,16 @@ public class TaskMenu {
 
                 case "1" -> createTask();
                 case "2" -> viewAllTasks();
-                case "3" -> searchTask();
-                case "4" -> updateTask();
-                case "5" -> changeTaskStatus();
-                case "6" -> deleteTask();
-                case "7" -> assignTaskToProject();
-                case "8" -> viewProjectTasks();
-                case "9" -> removeTaskFromProject();
-                case "10" -> running = false;
+                case "3" -> searchTasksByKeyword();
+                case "4" -> filterTasksByStatus();
+                case "5" -> filterTasksByPriority();
+                case "6" -> updateTask();
+                case "7" -> changeTaskStatus();
+                case "8" -> deleteTask();
+                case "9" -> assignTaskToProject();
+                case "10" -> viewProjectTasks();
+                case "11" -> removeTaskFromProject();
+                case "12" -> running = false;
 
                 default -> System.out.println("Invalid choice!");
             }
@@ -119,17 +124,82 @@ public class TaskMenu {
         }
     }
 
-    private void searchTask() {
+    private void searchTasksByKeyword() {
 
-        System.out.print("Enter Task ID: ");
-        String taskId = scanner.nextLine().trim();
+        System.out.print("Enter keyword (title or description): ");
+        String keyword = scanner.nextLine().trim();
 
-        Optional<Task> result = taskService.findTaskById(taskId);
+        List<Task> results = taskService.searchTasks(keyword);
 
-        if (result.isPresent()) {
-            displayTask(result.get());
-        } else {
-            System.out.println("Task not found.");
+        System.out.println("\n========== SEARCH RESULTS ==========");
+
+        if (results.isEmpty()) {
+            System.out.println("No tasks found matching: " + keyword);
+            return;
+        }
+
+        for (Task task : results) {
+            displayTask(task);
+        }
+
+        System.out.println("\nTotal results: " + results.size());
+    }
+
+    private void filterTasksByStatus() {
+
+        System.out.println("Statuses: TODO, IN_PROGRESS, COMPLETED, CANCELLED");
+        System.out.print("Enter status: ");
+        String input = scanner.nextLine().trim().toUpperCase();
+
+        try {
+
+            TaskStatus status = TaskStatus.valueOf(input);
+            List<Task> results = taskService.getTasksByStatus(status);
+
+            System.out.println("\n========== TASKS WITH STATUS: " + status + " ==========");
+
+            if (results.isEmpty()) {
+                System.out.println("No tasks found.");
+                return;
+            }
+
+            for (Task task : results) {
+                displayTask(task);
+            }
+
+            System.out.println("\nTotal tasks: " + results.size());
+
+        } catch (IllegalArgumentException e) {
+            System.out.println("Invalid status!");
+        }
+    }
+
+    private void filterTasksByPriority() {
+
+        System.out.println("Priorities: LOW, MEDIUM, HIGH, CRITICAL");
+        System.out.print("Enter priority: ");
+        String input = scanner.nextLine().trim().toUpperCase();
+
+        try {
+
+            Priority priority = Priority.valueOf(input);
+            List<Task> results = taskService.getTasksByPriority(priority);
+
+            System.out.println("\n========== TASKS WITH PRIORITY: " + priority + " ==========");
+
+            if (results.isEmpty()) {
+                System.out.println("No tasks found.");
+                return;
+            }
+
+            for (Task task : results) {
+                displayTask(task);
+            }
+
+            System.out.println("\nTotal tasks: " + results.size());
+
+        } catch (IllegalArgumentException e) {
+            System.out.println("Invalid priority!");
         }
     }
 

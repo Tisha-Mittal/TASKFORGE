@@ -126,6 +126,54 @@ public class TaskService {
         return Optional.ofNullable(tasks.get(taskId));
     }
 
+    // Search tasks by keyword (matches title or description, case-insensitive)
+    public List<Task> searchTasks(String keyword) {
+
+        if (keyword == null || keyword.isBlank()) {
+            return getAllTasks();
+        }
+
+        String lower = keyword.trim().toLowerCase();
+
+        return tasks.values()
+                .stream()
+                .filter(task ->
+                        task.getTitle().toLowerCase().contains(lower)
+                                || task.getDescription().toLowerCase().contains(lower)
+                )
+                .collect(Collectors.toList());
+    }
+
+    // Filter tasks by status
+    public List<Task> getTasksByStatus(TaskStatus status) {
+
+        if (status == null) {
+            throw new IllegalArgumentException(
+                    "Status cannot be null."
+            );
+        }
+
+        return tasks.values()
+                .stream()
+                .filter(task -> task.getStatus() == status)
+                .collect(Collectors.toList());
+    }
+
+    // Filter tasks by priority
+    public List<Task> getTasksByPriority(Priority priority) {
+
+        if (priority == null) {
+            throw new IllegalArgumentException(
+                    "Priority cannot be null."
+            );
+        }
+
+        return tasks.values()
+                .stream()
+                .filter(task -> task.getPriority() == priority)
+                .collect(Collectors.toList());
+    }
+
     // PROJECT MANAGEMENT
 
     public boolean assignTaskToProject(
@@ -372,9 +420,16 @@ public class TaskService {
 
         for (Task task : tasks.values()) {
 
+            // Only count dependencies that actually exist; dangling
+            // references would otherwise block a task forever.
+            int validDependencyCount = (int) task.getDependencies()
+                    .stream()
+                    .filter(tasks::containsKey)
+                    .count();
+
             dependencyCounts.put(
                     task.getId(),
-                    task.getDependencies().size()
+                    validDependencyCount
             );
 
             dependents.put(
@@ -386,6 +441,11 @@ public class TaskService {
         for (Task task : tasks.values()) {
 
             for (String dependencyId : task.getDependencies()) {
+
+                // Skip dangling references to tasks that don't exist.
+                if (!tasks.containsKey(dependencyId)) {
+                    continue;
+                }
 
                 dependents.get(dependencyId)
                         .add(task.getId());

@@ -220,4 +220,30 @@ class DependencyServiceTest {
                 taskService.findTaskById(taskC.getId()).isEmpty()
         );
     }
+
+    @Test
+    void shouldGenerateExecutionOrderIgnoringDanglingDependencies() {
+
+        TaskService isolatedService = new TaskService();
+
+        Task taskA = new Task(
+                "Task A", "", Priority.HIGH, null
+        );
+        Task taskB = new Task(
+                "Task B", "", Priority.MEDIUM, null
+        );
+
+        isolatedService.addTask(taskA);
+        isolatedService.addTask(taskB);
+
+        // Add a dependency on a task that does not exist (dangling reference).
+        taskB.addDependency("NONEXISTENT-ID");
+
+        // Should not throw and should still produce a valid order.
+        List<Task> order = isolatedService.getExecutionOrder();
+
+        assertEquals(2, order.size());
+        assertTrue(order.contains(taskA));
+        assertTrue(order.contains(taskB));
+    }
 }

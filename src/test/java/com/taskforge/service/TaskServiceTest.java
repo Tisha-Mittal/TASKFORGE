@@ -6,6 +6,7 @@ import com.taskforge.model.Priority;
 import com.taskforge.model.TaskStatus;
 
 import java.time.LocalDate;
+import java.util.List;
 import java.util.Optional;
 
 import org.junit.jupiter.api.Test;
@@ -119,6 +120,95 @@ public class TaskServiceTest {
         assertThrows(
                 IllegalArgumentException.class,
                 () -> service.addTask(null)
+        );
+    }
+
+    @Test
+    void shouldSearchTasksByKeyword() {
+
+        TaskService service = new TaskService();
+
+        service.addTask(new Task(
+                "Study Java", "Complete OOP", Priority.HIGH, null
+        ));
+        service.addTask(new Task(
+                "Design Database", "Create schema", Priority.MEDIUM, null
+        ));
+        service.addTask(new Task(
+                "Build Frontend", "React UI", Priority.LOW, null
+        ));
+
+        List<Task> results = service.searchTasks("java");
+
+        assertEquals(1, results.size());
+        assertEquals("Study Java", results.get(0).getTitle());
+    }
+
+    @Test
+    void shouldSearchTasksCaseInsensitive() {
+
+        TaskService service = new TaskService();
+
+        service.addTask(new Task(
+                "Study Java", "Complete OOP", Priority.HIGH, null
+        ));
+
+        List<Task> results = service.searchTasks("JAVA");
+
+        assertEquals(1, results.size());
+    }
+
+    @Test
+    void shouldFilterTasksByStatus() {
+
+        TaskService service = new TaskService();
+
+        Task todo = new Task("Todo Task", "", Priority.HIGH, null);
+        service.addTask(todo);
+
+        Task inProgress = new Task("In Progress Task", "", Priority.MEDIUM, null);
+        service.addTask(inProgress);
+        service.updateTaskStatus(inProgress.getId(), TaskStatus.IN_PROGRESS);
+
+        List<Task> results = service.getTasksByStatus(TaskStatus.IN_PROGRESS);
+
+        assertEquals(1, results.size());
+        assertEquals("In Progress Task", results.get(0).getTitle());
+    }
+
+    @Test
+    void shouldFilterTasksByPriority() {
+
+        TaskService service = new TaskService();
+
+        service.addTask(new Task("High Task", "", Priority.HIGH, null));
+        service.addTask(new Task("Low Task", "", Priority.LOW, null));
+
+        List<Task> results = service.getTasksByPriority(Priority.HIGH);
+
+        assertEquals(1, results.size());
+        assertEquals("High Task", results.get(0).getTitle());
+    }
+
+    @Test
+    void shouldRejectNullStatusFilter() {
+
+        TaskService service = new TaskService();
+
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> service.getTasksByStatus(null)
+        );
+    }
+
+    @Test
+    void shouldRejectNullPriorityFilter() {
+
+        TaskService service = new TaskService();
+
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> service.getTasksByPriority(null)
         );
     }
 }
